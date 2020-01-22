@@ -80,8 +80,7 @@ def make_candidates(symbols):
 def _parse_candidate(symbol):
     candidate = {}
     loc = symbol['location']
-    p = urlparse(loc['uri'])
-    fp = os.path.abspath(os.path.join(p.netloc, p.path))
+    fp = _uri_to_path(urlparse(loc['uri']))
 
     candidate['word'] = symbol['name']
     candidate['abbr'] = '{} [{}] {}'.format(
@@ -94,3 +93,15 @@ def _parse_candidate(symbol):
     candidate['action__line'] = loc['range']['start']['line'] + 1
     candidate['action__col'] = loc['range']['start']['character'] + 1
     return candidate
+
+
+def _uri_to_path(uri):
+    if os.name == 'nt' and uri.path.startswith('/') and uri.path[2] == ':':
+        abspath = uri.path[1:]
+    else:
+        abspath = os.path.abspath(uri.path)
+
+    if uri.netloc != '':
+        return os.path.join(uri.netloc, abspath)
+    else:
+        return abspath
